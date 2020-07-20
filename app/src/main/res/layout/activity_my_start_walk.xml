@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="function1.MyStartWalk">
+
+
+    <Button
+        android:id="@+id/button6"
+        android:layout_width="120dp"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginRight="20dp"
+        android:background="@drawable/button_background_round"
+        android:backgroundTint="#9C9C9C"
+        android:text=" 산책 취소 "
+        android:textColor="#FFFFFF"
+        android:textSize="21dp" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="128dp"
+        android:layout_marginRight="20dp"
+        android:layout_gravity="center"
+        android:max="100"
+        android:progress="20"
+        android:progressDrawable="@drawable/myprogressbar"
+        />
+
+    <TextView
+        android:id="@+id/textView11"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginRight="20dp"
+        android:background="#AAD8D8D8"
+        android:text="  추천 산책 시간 00분"
+        android:textAlignment="center"
+        android:textColor="#000000"
+        android:textSize="23dp" />
+
+    <TextView
+        android:id="@+id/textView12"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginRight="20dp"
+        android:background="#AAD8D8D8"
+        android:text="  산책한 산책 시간 00분 00초"
+        android:textAlignment="center"
+        android:textColor="#000000"
+        android:textSize="23dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="64dp"
+        android:orientation="horizontal">
+
+
+        <ImageButton
+            android:id="@+id/imageButton"
+            android:layout_width="10dp"
+            android:layout_height="50dp"
+            android:layout_marginLeft="128dp"
+            android:layout_marginRight="12dp"
+            android:layout_weight="1"
+            android:background="@drawable/button_background_round"
+            android:backgroundTint="#393939"
+            app:srcCompat="@android:drawable/ic_media_play" />
+
+        <ImageButton
+            android:id="@+id/imageButton2"
+            android:layout_width="10dp"
+            android:layout_height="50dp"
+            android:layout_marginLeft="12dp"
+            android:layout_marginRight="128dp"
+            android:layout_weight="1"
+            android:background="@drawable/button_background_round"
+            android:backgroundTint="#51ACACAC"
+            app:srcCompat="@android:drawable/ic_media_pause" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="64dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btn_input"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginLeft="64dp"
+            android:layout_marginTop="32dp"
+            android:layout_marginRight="64dp"
+            android:layout_marginBottom="32dp"
+
+            android:background="#707070"
+            android:text=" 산책 종료 (저장하기) "
+            android:textColor="#FFFFFF"
+            android:textSize="18dp"
+            android:textStyle="bold" />
+
+
+    </LinearLayout>
+
+
+
+
+</LinearLayout>
+
+
+
+
