@@ -17,7 +17,7 @@
 
 
     <TextView
-        android:id="@+id/textView11"
+        android:id="@+id/tv_recowalktime"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="20dp"
@@ -29,8 +29,9 @@
         android:textColor="#000000"
         android:textSize="23dp"
         android:textStyle="bold" />
+
     <TextView
-        android:id="@+id/textView12"
+        android:id="@+id/tv_walktime"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="20dp"
@@ -94,24 +95,8 @@
             android:layout_marginBottom="32dp"
             android:layout_weight="1"
 
-            android:background="#707070"
+            android:background="#1DDF98"
             android:text="  산책 시작  "
-            android:textColor="#FFFFFF"
-            android:textSize="21dp"
-            android:textStyle="bold" />
-
-        <Button
-            android:id="@+id/btn_input"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginLeft="32dp"
-            android:layout_marginTop="32dp"
-            android:layout_marginRight="32dp"
-            android:layout_marginBottom="32dp"
-
-            android:background="#707070"
-            android:text="만족도 입력"
             android:textColor="#FFFFFF"
             android:textSize="21dp"
             android:textStyle="bold" />

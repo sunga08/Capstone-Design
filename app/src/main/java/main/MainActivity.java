@@ -6,12 +6,14 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.myregisterlogin.R;
 
 import function1.MyStartWalkMain;
+import function1.PopupActivity;
 import map.MainMap;
 import myinformation.MyInformCheck;
 
@@ -20,7 +22,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView tv_id, tv_password;
 
     private long backBtnTime  =0;
-    private Button btn_myinform;
+    private ImageButton btn_myinform, btn_help;
     private Button btn_startwalk;
     private Button btn_map;
     private Button btn_input;
@@ -45,20 +47,35 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+
+       setContentView(R.layout.activity_main);
         //로그인 화면에서 넘어온 아이디 정보 받기
         Intent intent = getIntent();
         final String userID= intent.getStringExtra("userID");
         String userPassword= intent.getStringExtra("userPassword");
 
         //내정보 기능
-        btn_myinform = (Button) findViewById(R.id.btn_myinform);
+        btn_myinform = (ImageButton) findViewById(R.id.btn_myinform);
 
         btn_myinform.setOnClickListener(new View.OnClickListener(){
 
             @Override
             public void onClick(View view) {
                 Intent intent =  new Intent(MainActivity.this, MyInformCheck.class);
+                //MainActovity: 회원의 아이디 정보 넘기기
+                intent.putExtra("userID", userID);
+                startActivity(intent);
+            }
+        });
+
+        //도움말 기능
+        btn_help = (ImageButton) findViewById(R.id.btn_help);
+
+        btn_help.setOnClickListener(new View.OnClickListener(){
+
+            @Override
+            public void onClick(View view) {
+                Intent intent =  new Intent(MainActivity.this, SystemInform.class);
                 //MainActovity: 회원의 아이디 정보 넘기기
                 intent.putExtra("userID", userID);
                 startActivity(intent);
@@ -88,6 +105,21 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+        //3번 만족도 기능
+        //만족도 입력 버튼
+        Button btn_input = findViewById(R.id.btn_input);
+
+        btn_input.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, PopupActivity.class);
+                //아이디 정보 넘기기
+                intent.putExtra("userID", userID);
+                startActivity(intent);
+            }
+        });
+
 
     }
 }
