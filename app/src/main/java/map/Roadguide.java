@@ -24,11 +24,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -46,8 +43,7 @@ public class Roadguide extends AppCompatActivity {
     Button road_search_btn;
     static double start_lat, start_long, end_lat, end_long;
     static Integer time, time2, distance, distance2 =0;
-    static double myTime, myTime2 = 0;
-    static String userID;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,8 +67,7 @@ public class Roadguide extends AppCompatActivity {
         start_lat = intent.getExtras().getDouble("now_lat");
         start_long = intent.getExtras().getDouble("now_long");
 
-        userID = intent.getExtras().getString("userID");
-        Log.e("userID: ",""+userID);
+        final String userID= intent.getStringExtra("userID");
 
         //넘어온 정보로 텍스트뷰 설정
         if(start_txt!=null)
@@ -116,25 +111,16 @@ public class Roadguide extends AppCompatActivity {
                 }
 
             });
-
-            new BackgroundTask_Speed().execute();
         }
 
         //'길찾기' 버튼 클릭시
         road_search_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
-                Log.e("시간 설정...",""+myTime+"분");
+                Log.e("시간 설정...",""+time2+"분");
                 Log.e("거리 설정...",""+distance2+"M");
-                if(myTime!=0&&myTime2!=0){
-                    adapter.addItem(new guide_list("추천경로", (int) myTime,distance));
-                    adapter.addItem(new guide_list("대로우선", (int) myTime2,distance2));
-                }
-                else {
-                    adapter.addItem(new guide_list("추천경로", time, distance));
-                    adapter.addItem(new guide_list("대로우선", time2, distance2));
-                }
+                adapter.addItem(new guide_list("추천경로",time,distance));
+                adapter.addItem(new guide_list("대로우선",time2,distance2));
                 listView.setAdapter(adapter);
             }
         });
@@ -144,7 +130,6 @@ public class Roadguide extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(Roadguide.this, MainMap.class);
-                intent.putExtra("userID",userID);
                 startActivity(intent);
             }
         });
@@ -200,67 +185,6 @@ public class Roadguide extends AppCompatActivity {
             return null;
         }
     }
-
-    class BackgroundTask_Speed extends AsyncTask<Void, Void, String> {
-        String target; //접속할 주소
-
-        @Override
-        protected void onPreExecute() {
-        }
-
-        @Override
-        protected String doInBackground(Void... voids) {
-
-            try{
-
-                target="http://bi1724.dothome.co.kr/Get_Speed.php?userID="+ userID;
-
-                URL url = new URL(target);
-                HttpURLConnection httpURLConnection = (HttpURLConnection)url.openConnection();
-                InputStream inputStream = httpURLConnection.getInputStream(); //넘어오는 결과값 저장
-                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream)); //inputstream 내용 버퍼에 담아서 읽을 수 있게
-                String temp;
-                String err = "Speed 가져오기 오류";
-                StringBuilder stringBuilder = new StringBuilder();
-
-                temp = bufferedReader.readLine();
-
-                if(temp==null){
-                    bufferedReader.close();
-                    inputStream.close();
-                    httpURLConnection.disconnect();
-                    return err;
-                }
-
-                bufferedReader.close();
-                inputStream.close();
-                httpURLConnection.disconnect();
-                Log.e("temp ",temp);
-                return temp; //trim();
-            } catch (Exception e){
-                return new String("Exception: "+e.getMessage());
-            }
-        }
-
-        @Override
-        protected void onProgressUpdate(Void... values) {
-            super.onProgressUpdate(values);
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            Log.e("postExecute: ",result);
-
-            myTime = distance / Double.parseDouble(result) / 60;
-            myTime2 = distance2 / Double.parseDouble(result) / 60;
-            if(result==null){
-                myTime=0;
-                myTime2=0;
-            }
-        }
-    }
-
-
 
     //길찾기 결과 목록 어댑터 설정
     class RoadAdapter extends BaseAdapter {

@@ -88,6 +88,6 @@
             android:padding="10dp"
             android:scrollbars="vertical"
             android:background="@android:color/transparent"
-            android:hint="리뷰 내용을 작성하세요."/>
+            android:text="리뷰를 작성하세요   리뷰를 작성하세요    리뷰를 작성하세요   리뷰를 작성하세요   리뷰를 작성하세요   리뷰를 작성하세요" />
     </RelativeLayout>
 </RelativeLayout>

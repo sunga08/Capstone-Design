@@ -129,10 +129,10 @@
 
 
     <TextView
-        android:id="@+id/textView06"
+        android:id="@+id/tv_walkDist"
         android:layout_width="316dp"
         android:layout_height="60dp"
-        android:layout_marginTop="440dp"
+        android:layout_marginTop="436dp"
         android:background="@drawable/button_background_round"
         android:backgroundTint="#FF1DDF98"
         android:padding="15dp"

@@ -48,5 +48,6 @@ dependencies {
     //인디케이터
     implementation 'me.relex:circleindicator:1.2.2'
 
+    //gps 위치관련
     implementation 'com.github.pedroSG94:AutoPermissions:1.0.3'
 }

@@ -11,18 +11,13 @@ import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.toolbox.Volley;
 import com.example.myregisterlogin.R;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -45,9 +40,8 @@ public class Review_main extends AppCompatActivity {
     List<review_data> reviewList;
     View view;
     TextView place_txt, review_score;
-    Button enroll_btn, refresh_btn;
+    Button enroll_btn;
     static String place_name=null;
-    static String userID; //20.09.20
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -62,24 +56,22 @@ public class Review_main extends AppCompatActivity {
         listView.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
         reviewList = new ArrayList<review_data>();
 
-        refresh_btn = (Button) findViewById(R.id.bt_refresh_review);
-
-        // 20.09.20 위치 변경
-        Intent intent = getIntent();
-        place_name = intent.getExtras().getString("place_name");
-        place_txt.setText(place_name);
-        userID = intent.getStringExtra("userID");
-
-        //final ArrayList<review_data> item = new ArrayList<review_data>();
-
-        new BackgroundTask().execute();
-        new BackgroundTask2().execute();
 
         //리스트뷰 어댑터 설정
+        Intent intent = getIntent();
+
         adapter = new Adapter_review(getApplicationContext(),reviewList);
         listView.setAdapter(adapter);
-        //reviewList.clear();
 
+
+        final String userID = intent.getStringExtra("userID");
+
+        place_name = intent.getExtras().getString("place_name");
+        place_txt.setText(place_name);
+
+        new BackgroundTask2().execute();
+
+        new BackgroundTask().execute();
 
         //리뷰 등록 하기 버튼
         enroll_btn.setOnClickListener(new View.OnClickListener() {
@@ -89,15 +81,6 @@ public class Review_main extends AppCompatActivity {
                 intent.putExtra("place_name",place_name);
                 intent.putExtra("userID",userID);
                 startActivity(intent);
-            }
-        });
-
-        //새로고침 버튼 20.09.20
-        refresh_btn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                new BackgroundTask().execute();
-                new BackgroundTask2().execute();
             }
         });
 
@@ -139,7 +122,7 @@ public class Review_main extends AppCompatActivity {
                 bufferedReader.close();
                 inputStream.close();
                 httpURLConnection.disconnect();
-                Log.e("별점 평균 temp ",temp);
+                Log.e("temp ",temp);
                 return new String("별점 "+temp+"점"); //trim();
             } catch (Exception e){
                 return new String("Exception: "+e.getMessage());
@@ -153,11 +136,52 @@ public class Review_main extends AppCompatActivity {
 
         @Override
         protected void onPostExecute(String result) {
-            Log.e("별점 평균 postExecute: ",result);
+            Log.e("postExecute: ",result);
             review_score.setText(result);
         }
     }
 
+    class Adapter_review extends BaseAdapter {
+        private Context context;
+        List<review_data> reviewList = new ArrayList<>();
+
+        public Adapter_review(Context context, List<review_data> reviewList) {
+            this.context = context;
+            this.reviewList = reviewList;
+        }
+
+
+        public void addItem(review_data item) {
+            reviewList.add(item);
+        }
+
+        @Override
+        public int getCount() {
+            return reviewList.size();
+        }
+
+        @Override
+        public Object getItem(int position) {
+            return reviewList.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            ReviewView view = new ReviewView(getApplicationContext());
+            review_data item = reviewList.get(position);
+
+            view.setUserID(item.getUserID());
+            view.setScore(item.getScore());
+            view.setReviewTxt(item.getReviewTxt());
+
+            return view;
+        }
+    }
 
     //DB에 등록된 리뷰 가져와서 보여주기
     class BackgroundTask extends AsyncTask<Void, Void, String> {
@@ -195,6 +219,7 @@ public class Review_main extends AppCompatActivity {
                 e.printStackTrace();
             }
 
+
             return null;
         }
 
@@ -213,7 +238,7 @@ public class Review_main extends AppCompatActivity {
                 String userID, reviewText;
                 Double reviewScore;
 
-                reviewList.clear(); //20.09.20
+
                 while(count<jsonArray.length()){
                     JSONObject object = jsonArray.getJSONObject(count);
                     userID = object.getString("userID");
@@ -232,102 +257,6 @@ public class Review_main extends AppCompatActivity {
         }
 
 
-    }
-
-    class Adapter_review extends BaseAdapter {
-        private Context context;
-        List<review_data> reviewList = new ArrayList<>();
-
-        public Adapter_review(Context context, List<review_data> reviewList) {
-            this.context = context;
-            this.reviewList = reviewList;
-        }
-
-
-        public void addItem(review_data item) {
-            reviewList.add(item);
-        }
-
-        @Override
-        public int getCount() {
-            return reviewList.size();
-        }
-
-        @Override
-        public Object getItem(int position) {
-            return reviewList.get(position);
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-
-        @Override
-        public View getView(final int position, View convertView, ViewGroup parent) {
-            ReviewView view = new ReviewView(getApplicationContext());
-            final review_data item = reviewList.get(position);
-
-            view.setUserID(item.getUserID());
-            view.setScore(item.getScore());
-            view.setReviewTxt(item.getReviewTxt());
-
-            //리뷰 삭제 버튼 20.09.20
-            Button delete_btn = (Button) view.findViewById(R.id.bt_delete_review);
-            delete_btn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Log.d("getUserID",item.getUserID());
-                    if(item.getUserID().equals(userID)) {
-                        // 아이템 삭제
-                        reviewList.remove(position);
-                        Toast.makeText(getApplicationContext(), "삭제되었습니다.", Toast.LENGTH_LONG).show();
-                    } else if(!item.getUserID().equals(userID)){
-                        Toast.makeText(getApplicationContext(), "삭제할 수 없습니다.", Toast.LENGTH_LONG).show();
-                    }
-
-                    // listview 갱신.
-                    adapter.notifyDataSetChanged();
-                    new BackgroundTask().execute();
-                    new BackgroundTask2().execute();
-
-                    Response.Listener<String> responseListener = new Response.Listener<String>() {
-                        @Override
-                        public void onResponse(String response)
-                        {
-                            try
-                            {
-                                JSONObject jsonResponse = new JSONObject(response);
-                                boolean success = jsonResponse.getBoolean("success");
-                                if (success)
-                                {
-                                    //Toast.makeText(getApplicationContext(), "삭제되었습니다.", Toast.LENGTH_LONG).show();
-
-                                } else
-                                {
-                                    Toast.makeText(getApplicationContext(), "삭제 실패", Toast.LENGTH_LONG).show();
-                                    return;
-                                }
-
-                            } catch (JSONException e)
-                            {
-                                e.printStackTrace();
-                            }
-
-                        }
-                    };
-
-                    ReviewDeleteRequest RDR = new ReviewDeleteRequest(place_name, userID, responseListener);
-                    Log.e("Delete request: ",place_name+"  "+userID);
-                    RequestQueue queue = Volley.newRequestQueue(Review_main.this);
-                    queue.add(RDR);
-
-                }
-
-            });
-
-            return view;
-        }
     }
 
 }

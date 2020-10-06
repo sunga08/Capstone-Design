@@ -4,16 +4,22 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Vibrator;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.TextView;
+
 
 import com.example.myregisterlogin.R;
 
@@ -36,11 +42,12 @@ import org.w3c.dom.Text;
 
 import function1.walktimecalculater.UserInform;
 import function1.walktimecalculater.WalkTimeCalculater;
+import shareddata.PreferenceManager;
 
 public class MyStartWalkMain extends AppCompatActivity {
 
     private ImageButton btn_cancle;
-    TextView tv_walktime;
+    TextView tv_walktime ,tv_walkDist;
     String userID =null ;
 
 
@@ -49,6 +56,11 @@ public class MyStartWalkMain extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_start_walk_main2);
+
+
+
+        //gps 관련
+        AutoPermissions.Companion.loadAllPermissions(MyStartWalkMain.this,101);
 
         //절대경로 관련
         File saveFile = new File(getFilesDir(), "/userData"); // 저장 경로
@@ -81,7 +93,47 @@ public class MyStartWalkMain extends AppCompatActivity {
         //파일에서 시간을 읽어와서 설정
         getWalkMinute();
 
-        AutoPermissions.Companion.loadAllPermissions(this,101);
+        //오늘 산책한 거리 표시
+        tv_walkDist = findViewById(R.id.tv_walkDist);
+        //쓴 기록이 있을 때
+        if(PreferenceManager.getString(MyStartWalkMain.this, "totalDist" + userID) !=null){
+
+            int dist;
+            double dist_m;
+
+            Date today;
+            SimpleDateFormat format1;
+            format1 = new SimpleDateFormat("yyyy년 MM월 dd일");
+            today = new Date();
+
+            if((format1.format(today).toString().equals(PreferenceManager.getString(MyStartWalkMain.this, "totalDist_date" + userID)))){
+
+                try {
+                    dist = (int) Double.parseDouble(PreferenceManager.getString(MyStartWalkMain.this, "totalDist" + userID));
+                    //미터로 변환
+                    dist_m = dist / 10.0 ;
+                }catch (Exception e){
+                    dist = 0;
+                    dist_m = 0.0;
+                }
+
+                tv_walkDist.setText(dist_m+"m");
+
+            }
+            else{
+                tv_walkDist.setText("00 m");
+            }
+
+
+
+
+        }
+        //쓸 기록이 없을 때
+        else{
+            tv_walkDist.setText("00 m");
+        }
+
+
 
         //산책시작 버튼
         Button btn_startwalk = findViewById(R.id.btn_startwalk);

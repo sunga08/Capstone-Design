@@ -55,16 +55,6 @@
             android:textColor="#FFFFFF"
             android:fontFamily="@font/dohyon_ttf"/>
 
-        <Button
-            android:id="@+id/bt_refresh_map"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_marginRight="10dp"
-            android:layout_marginTop="10dp"
-            android:layout_alignParentRight="true"
-            android:background="@android:drawable/ic_popup_sync"
-            android:backgroundTint="#FF1DDF98" />
-
         <ImageButton
             android:id="@+id/bt_my_position"
             android:layout_width="50dp"

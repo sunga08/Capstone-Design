@@ -11,6 +11,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -18,8 +19,12 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.os.Vibrator;
 import android.util.Log;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
@@ -37,6 +42,7 @@ import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -45,6 +51,7 @@ import java.util.ArrayList;
 import java.util.Date;
 
 import function1.function4.BadDogThread;
+import function1.function4.GetMyLocationRequest;
 import function1.function4.MyNullLocationRequest;
 import function1.walktimecalculater.UserInform;
 import function1.walktimecalculater.WalkTimeCalculater;
@@ -86,18 +93,21 @@ public class MyStartWalk extends AppCompatActivity {
     private Location mLastlocation = null;
     private double speed = 0.0;
     double totalDist=0, totalTime=0;
+    LocationManager locationManager = null;
 
     //위치받는 핸들러
     public final static int REPEAT_DELAY = 1000;
     public Handler GPShandler;
     double gpsLatitude, gpsLongitude;
 
-    private boolean isPause=false; //20.09.19
 
-    private boolean isFunctionOn; //기능 켜져 있는 확인하는 변수
+
+
+//    private boolean isFunctionOn; //기능 켜져 있는 확인하는 변수
 
     //사용자 정보
     String userID;
+
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
@@ -105,11 +115,14 @@ public class MyStartWalk extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_start_walk);
 
+        //진동
+        Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+        vibrator.vibrate(900);
+
+
         //산책시작메인 화면에서 넘어온 아이디 정보 받기
         Intent intent = getIntent();
         userID= intent.getStringExtra("userID");
-
-        //AutoPermissions.Companion.loadAllPermissions(this,101);
 
 
         //유아이 찾기
@@ -129,6 +142,8 @@ public class MyStartWalk extends AppCompatActivity {
 
         // 스톱워치 기능
         timeThread = new Thread(new TimeThread());
+
+
 
         // 기피견종 알림 기능 (멈춰있을 때도 작동)
         //서버에서 사용자 정보를 가져와 변수에 저장한 후 badDogThread에 넘겨준다 : 넘길 정보 - 사용자의 기피견종 GetMyBadDog
@@ -174,11 +189,37 @@ public class MyStartWalk extends AppCompatActivity {
 
         Log.d("11111", "기피견종 값은 :  in MyStartWalk   : " +  PreferenceManager.getString(MyStartWalk.this,"badDog"+userID));
 
-        badDogThread = new Thread((new BadDogThread(MyStartWalk.this, userID, PreferenceManager.getString(MyStartWalk.this,"badDog"+userID))));
-        badDogThread.start();
+        //gps기능 활성화
+        startLocationService();
 
-        isFunctionOn=true;
+        //기피견종 알림
+        if((PreferenceManager.getString(MyStartWalk.this,"badDogAlarm"+userID)).equals("true")) { //true면
+            //위치받고 db에 갱신하기
+//            GPShandler.sendEmptyMessage(0);
+            badDogThread = new Thread((new BadDogThread(MyStartWalk.this, userID, PreferenceManager.getString(MyStartWalk.this, "badDog" + userID))));
+            badDogThread.start();
+        }
 
+        else{
+            //기피 견종 알림 기능을 켜시겠습니까?
+            new android.app.AlertDialog.Builder(MyStartWalk.this)
+                    .setTitle("알림").setMessage("기피 견종 알림을 켜시겠습니까 ?")
+                    .setPositiveButton("네", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int whichButton) {
+                            PreferenceManager.setString(MyStartWalk.this, "badDogAlarm"+userID,"true");
+                            // 기피견종 알림 기능 (멈춰있을 때도 작동)
+                            badDogThread = new Thread((new BadDogThread(MyStartWalk.this, userID, PreferenceManager.getString(MyStartWalk.this, "badDog" + userID))));
+                            badDogThread.start();
+                        }
+                    })
+                    .setNegativeButton("아니오", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int whichButton) {
+                        }
+                    })
+                    .show();
+        }
+
+        /*
         //위치 갱신
         GPShandler = new Handler() {
             public void handleMessage(Message msg)
@@ -221,12 +262,15 @@ public class MyStartWalk extends AppCompatActivity {
 
         };
 
+        */
 
+        /*
         //기피견종 안내 기능 On된 상태면 위치 받기
-        if(isFunctionOn==true) {
+        if(PreferenceManager.getString(MyStartWalk.this, "badDogAlarm"+userID).equals("true")) {
             startLocationService();
             GPShandler.sendEmptyMessage(0);
         }
+        */
 
         //산책 취소 버튼
         btn_cancle.setOnClickListener(new View.OnClickListener(){
@@ -237,15 +281,18 @@ public class MyStartWalk extends AppCompatActivity {
                         .setTitle("산책 취소").setMessage("정말 취소 하시겠습니까?")
                         .setPositiveButton("산책 취소", new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int whichButton) {
-//                                onBackPressed(); //취소버튼 누른거랑 동일한 효과
 
                                 //사용자 위도 경도 null 만듦
-                                //**********************************************************************고쳐야함**************************///
-                                //makeUserLocationNull(userID);
+                                makeUserLocationNull(userID);
+                                stopLocation();
 
-                                //20200915
-                                //시간 스탑
-                                badDogThread.interrupt();
+                                if (PreferenceManager.getString(MyStartWalk.this, "badDogAlarm"+userID).equals("true")) {
+                                    //20200915
+                                    //시간 스탑
+                                    badDogThread.interrupt();
+                                    PreferenceManager.setString(MyStartWalk.this, "badDogAlarm"+userID,"false"); //알림 끄기
+                                }
+
 
                                 Intent i = new Intent(MyStartWalk.this, MyStartWalkMain.class);
                                 i.putExtra("userID", userID);
@@ -271,7 +318,7 @@ public class MyStartWalk extends AppCompatActivity {
         imgbtn_play.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-                isPause=false;  //20.09.19
+
                 //산책한 산책시간 흘러가게 하기
                 playWalkTime();
 
@@ -281,48 +328,39 @@ public class MyStartWalk extends AppCompatActivity {
         //산책 일시정지 버튼
         imgbtn_stop.setOnClickListener(new View.OnClickListener(){
             @Override
-            public void onClick(View view) {  //변경 부분 20.09.19
+            public void onClick(View view) {
+                stopWalkTime();
+                //속력 갱신
+                double mySpeed = getSpeed();
+                Response.Listener<String> responseListener = new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response)
+                    {
+                        try
+                        {
+                            JSONObject jsonResponse = new JSONObject(response);
+                            boolean success = jsonResponse.getBoolean("success");
+                            if (success)
+                            {
+                                Toast.makeText(getApplicationContext(), "mySpeed 갱신 성공", Toast.LENGTH_LONG).show();
 
-                if(isPause==true){  //일시정지가 이미 한번 눌린상태면(다시 시작할 때)
-                    isPause=false;
-                    Log.e("isPasue: ","false 설정 됨");
-                }
-                else { //진짜 일시정지 상태 (일시정지가 false인 상태)
-                    isPause = true;
-                    Log.e("isPause: ", "true 설정 됨");
-                    stopWalkTime();
-                    double mySpeed = getSpeed();
-                    //속력 갱신
-                    if (mySpeed != 0) {  //20.09.19
-                        Log.e("새로운 speed: ", "" + mySpeed);
-                        Response.Listener<String> responseListener = new Response.Listener<String>() {
-                            @Override
-                            public void onResponse(String response) {
-                                try {
-                                    JSONObject jsonResponse = new JSONObject(response);
-                                    boolean success = jsonResponse.getBoolean("success");
-                                    if (success) {
-                                        Toast.makeText(getApplicationContext(), "mySpeed 갱신 성공", Toast.LENGTH_LONG).show();
-
-                                    } else {
-                                        Toast.makeText(getApplicationContext(), "mySpeed 갱신 실패", Toast.LENGTH_LONG).show();
-                                        return;
-                                    }
-
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                }
-
+                            } else
+                            {
+                                Toast.makeText(getApplicationContext(), "mySpeed 갱신 실패", Toast.LENGTH_LONG).show();
+                                return;
                             }
-                        };
 
-                        SpeedRequest SR = new SpeedRequest(userID, mySpeed, responseListener);
-                        RequestQueue queue = Volley.newRequestQueue(MyStartWalk.this);
-                        queue.add(SR);
-                        totalDist = 0;  //20.09.18
-                        totalTime = 0;  //20.09.18
+                        } catch (JSONException e)
+                        {
+                            e.printStackTrace();
+                        }
+
                     }
-                }
+                };
+
+                SpeedRequest SR = new SpeedRequest(userID, mySpeed, responseListener);
+                RequestQueue queue = Volley.newRequestQueue(MyStartWalk.this);
+                queue.add(SR);
             }
         });
 
@@ -331,8 +369,6 @@ public class MyStartWalk extends AppCompatActivity {
         btn_finish.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View view) {
-
-
                 new AlertDialog.Builder(MyStartWalk.this)
                         .setTitle("산책 종료").setMessage("산책을 저장 하시겠습니까?")
                         .setPositiveButton("저장하기", new DialogInterface.OnClickListener() {
@@ -340,13 +376,22 @@ public class MyStartWalk extends AppCompatActivity {
 
                                 //산책한 시간 파일에 저장
                                 saveWalkTime(new_walkMinute);
+                                stopLocation();
 
-                                //시간 스탑
-                                badDogThread.interrupt();
+                                if(PreferenceManager.getString(MyStartWalk.this, "badDogAlarm"+userID).equals("true")){
+                                    //시간 스탑
+                                    badDogThread.interrupt();
 
-                                //사용자 위도 경도 null 만듦
-                                makeUserLocationNull(userID);
-                                stopLocation(); //GPS 기능 종료  20.09.18
+                                    //사용자 위도 경도 null 만듦
+                                    makeUserLocationNull(userID);
+
+                                    //기피견종 알람 끄기
+                                    PreferenceManager.setString(MyStartWalk.this, "badDogAlarm"+userID,"false");
+                                }
+
+                                //20200918 총이동거리를 프리퍼런스에 저장하기
+                                saveOneDayTotalDistPreference(totalDist);
+
 
                                 //만족도 조사할지 말지를 물어봄
                                 new AlertDialog.Builder(MyStartWalk.this)
@@ -357,6 +402,7 @@ public class MyStartWalk extends AppCompatActivity {
                                                 Intent i = new Intent(MyStartWalk.this, PopupActivity.class);
                                                 i.putExtra("userID", userID);
                                                 i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                                                //stopLocation(); //GPS 기능 종료
                                                 startActivity(i);
                                             }
                                         })
@@ -366,7 +412,7 @@ public class MyStartWalk extends AppCompatActivity {
                                                         Intent i = new Intent(MyStartWalk.this, MainActivity.class);
                                                         i.putExtra("userID", userID);
                                                         i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                                                        stopLocation(); //GPS 기능 종료
+                                                        //stopLocation(); //GPS 기능 종료
                                                         startActivity(i);
                                             }
                                         })
@@ -385,6 +431,12 @@ public class MyStartWalk extends AppCompatActivity {
         });
 
 
+    }
+
+    //뒤로가기 기능 막기
+    @Override
+    public void onBackPressed(){
+        //super.onBackPressed();
     }
 
     //사용자의 위도와 경도 값 null 만들기
@@ -602,6 +654,7 @@ public class MyStartWalk extends AppCompatActivity {
                 BufferedReader br = new BufferedReader( rw );
         ){
 
+            Log.d("9999", "시간저장" +saveFile+fileName);
 
             String readLine = null ;
             Integer i = 1;
@@ -768,73 +821,46 @@ public class MyStartWalk extends AppCompatActivity {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    public void saveOneDayTotalDist(Double totalDist) throws IOException {
+    void saveOneDayTotalDistPreference(Double totalDist){
+
         //날짜
         Date today;
         SimpleDateFormat format1;
         format1 = new SimpleDateFormat("yyyy년 MM월 dd일");
         today = new Date();
 
-        //파일 이름
-        final String fileName = "/OneDayTotalDist" + userID + ".txt";
 
-        // 파일을 읽고 오늘 날짜 정보가 파일에 써있든지 안 써있든지 그 내용에 거리를 합산하여 덮어쓰기
+        //20200918
 
-        //파일생성
-        File saveFile = new File(getFilesDir(), "/userData"); // 저장 경로
-
-        //파일 읽기
-        ArrayList<OneDayTotalDist> oneDayTotalDistList = new ArrayList<>();
-        //권한 필요 menifests 파일에 읽기 쓰기 권한 추가 필요
-
-        //폴더생성
-        if (!saveFile.exists()) { // 폴더 없을 경우
-            saveFile.mkdir(); // 폴더 생성
-        }
-
-
-        try (
-                FileReader rw = new FileReader(saveFile + fileName);
-                BufferedReader br = new BufferedReader(rw);
-        ) {
-
-
-            String readLine = null;
-            Integer i = 1;
-
-            //파일 읽기
-            while ((readLine = br.readLine()) != null) {
-                //readLine 저장해야함
-                // 1: 날짜 2: 총 거리
-
-                OneDayTotalDist buffer = new OneDayTotalDist();
-
-                buffer.setToday(readLine);
-                buffer.setTotalDist(Integer.parseInt(br.readLine()));
-
-                oneDayTotalDistList.add(buffer);
-
-                Log.d("88888", "걸어간 총 거리 : \n"  + oneDayTotalDistList.get(i - 1).getToday() + "\n" + oneDayTotalDistList.get(i - 1).getTotalDist());
-                i++;
+        Log.d("99999","총거리 계산 : totaldist = "+ totalDist);
+        Toast.makeText(MyStartWalk.this, "총거리 계산 : totaldist = "+ totalDist, Toast.LENGTH_SHORT).show();
+        if(PreferenceManager.getString(MyStartWalk.this,"totalDist"+userID )!= null) {
+            //오늘 날짜와 다를경우
+            //oldDist=0으로 합산저장
+            if (!(format1.format(today).toString().equals(PreferenceManager.getString(MyStartWalk.this, "totalDist_date" + userID)))) {
+                double oldDist = 0.0;
+                PreferenceManager.setString(MyStartWalk.this, "totalDist_date" + userID,format1.format(today) );// 오늘날짜 저장
+                PreferenceManager.setString(MyStartWalk.this, "totalDist" + userID, (oldDist+totalDist)+"");//string으로 저장함
 
             }
+            //날짜가 같을 경우
+            //읽어온 것과 (oneDayTotalDistList.get(0).getTotalDist()) +totalDist를 합산
+            else {
+                double oldDist = Double.parseDouble(PreferenceManager.getString(MyStartWalk.this, "totalDist" + userID));
+                PreferenceManager.setString(MyStartWalk.this, "totalDist" + userID, oldDist + totalDist + "");//string으로 저장함
 
-            //전에 쓴 기록이 있을 경우
-
-                //날짜가 다를 경우
-                    //totalDist=0으로 덮어쓰기
-
-                //날짜가 같을 경우
-                    //읽어온 것과 (oneDayTotalDistList.get(0).getTotalDist()) +totalDist를 합산 덮어쓰기
-
-            //전에 쓴 기록이 없을 경우
-                //totalDist=0으로 덮어쓰기
-
-
-
-
-
+            }
         }
+
+        //전에 쓴 기록이 없을 경우
+        //oldDist=0으로 합산저장
+        else{
+            double oldDist = 0.0;
+            PreferenceManager.setString(MyStartWalk.this, "totalDist_date" + userID,format1.format(today) );// 오늘날짜 저장
+            PreferenceManager.setString(MyStartWalk.this, "totalDist" + userID, (oldDist+totalDist)+"");//string으로 저장함
+        }
+
+
     }
 
     // 현재 위치 갱신
@@ -851,7 +877,7 @@ public class MyStartWalk extends AppCompatActivity {
             double deltaDist = 0;
 
             //총 이동거리 계산
-            if(mLastlocation!=null && mLastlocation.getLatitude()!=location.getLatitude()&&isPause==false) {  //20.09.19
+            if(mLastlocation!=null && mLastlocation.getLatitude()!=location.getLatitude()) {
                 //위치간격
                 deltaDist = mLastlocation.distanceTo(location);
                 totalDist+=deltaDist;
@@ -859,24 +885,17 @@ public class MyStartWalk extends AppCompatActivity {
                 Log.e("deltaDist: ",""+deltaDist); //이전 위치와 거리 차이
                 Log.e("totalDist: ",""+totalDist); //총 이동 거리
 
-                //20200918 총이동거리를 파일에 저장하기
-                try {
-                    saveOneDayTotalDist(totalDist);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
 
             }
 
-            if(mLastlocation!=null&&isPause==false){  //20.09.19
+            if(mLastlocation!=null){
                 Log.e("location: ",""+location.getLatitude()+" mlastlocation: "+mLastlocation.getLatitude());
                 Log.e("deltaDist: ",""+deltaDist); //이전 위치와 거리 차이
                 totalTime+=5;
             }
 
 
-            if(mLastlocation != null&&isPause==false){  //20.09.19
+            if(mLastlocation != null){
                 //시간 간격
                 deltaTime = (location.getTime()-mLastlocation.getTime())/1000.0;
                 Log.d("deltaTime:",""+deltaTime+"초");
@@ -886,6 +905,38 @@ public class MyStartWalk extends AppCompatActivity {
 
             //현재 위치를 지난 위치로 변경
             mLastlocation = location;
+
+            //알림이 켜져있을 때만 디비에 위치정보를 공유함
+            if(PreferenceManager.getString(MyStartWalk.this,"badDogAlarm"+userID).equals("true")) {
+                //위치 갱신
+                //데이터베이스에 위치를 갱신함
+                Response.Listener<String> responseListner_InputMyLocation = new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        //제이슨 오브젝트로 서버 전송 으로 반려견 정보 등록함 (일반 String 사용할수 없기때문) = 운반체
+                        try {
+                            JSONObject jsonObject = new JSONObject(response); //알트+엔터로 오류 처리
+                            boolean success = jsonObject.getBoolean("success"); //php문에서 success 값을 가져옴 성공여부 알수 있음
+                            if (success) {
+                                Log.d("99999", "디비에 위치 넣기 성공 , 경도: " + mLastlocation.getLatitude());
+
+                            } else {    //내정보 조회 실패
+                                return;
+                            }
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                };
+
+                InputMyLocationRequest inputMyLocation = new InputMyLocationRequest(userID, mLastlocation.getLatitude(), mLastlocation.getLongitude(), responseListner_InputMyLocation);
+                RequestQueue queue_InputMyLocation = Volley.newRequestQueue(MyStartWalk.this);
+                queue_InputMyLocation.add(inputMyLocation);
+
+                Log.d("99999", "디비에 위치 넣기 성공2 , 경도: " + mLastlocation.getLatitude());
+            }
         }
 
         @Override
@@ -902,46 +953,49 @@ public class MyStartWalk extends AppCompatActivity {
 
     };
 
-    LocationManager locationManager = null;
+
 
     public void startLocationService() {
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE); //LOCATION_SERVICE
         Location location = null;
-        if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) { //네트워크가 활성화 되어 있다면
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                return;
+
+        //기피 견종 알림이 켜져있거나 말거나 gps 기능은 켜져야함
+            if (locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) { //네트워크가 활성화 되어 있다면
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    return;
+                }
+                location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+
+            } else {
+                location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER); //마지막에 알려진 위치
             }
-            location = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
 
-        }else{
-            location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER); //마지막에 알려진 위치
-        }
-
-        String getLongitude = "LAST getLongitude : " + location.getLongitude();
-        String getLatitude = " LAST getLatitude : " + location.getLatitude();
-        Log.i("Location ", getLongitude + "" + getLatitude);
+//            String getLongitude = "LAST getLongitude : " + location.getLongitude();
+//            String getLatitude = " LAST getLatitude : " + location.getLatitude();
+//            Log.i("Location ", getLongitude + "" + getLatitude);
 
 
-        Toast.makeText(getApplicationContext(), "GPS", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), "GPS :: ON", Toast.LENGTH_LONG).show();
 
-        boolean isEnable = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        Log.e("GPS Enable: ",""+isEnable);
-        long minTime = 5000; // 5초
-        long minDistance = 0;
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, minTime, minDistance, locationListener);
+            boolean isEnable = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+            Log.e("GPS Enable: ", "" + isEnable);
+            long minTime = 5000; // 5초
+            long minDistance = 0;
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, minTime, minDistance, locationListener);
+
     }
+
 
     public void stopLocation(){
         locationManager.removeUpdates(locationListener);
-
     }
 
     public double getSpeed(){
-        speed = Math.round((totalDist/totalTime)*10)/10.0;  //20.09.18
+        speed = totalDist/totalTime;
         Log.e("총 이동거리: ",""+Math.round(totalDist*100)/100.0+"m");
         Log.e("총 시간: ",""+totalTime+"초");
         Log.e("속력: ",""+speed+"m/s");
-        return speed; //20.09.18
+        return Math.round(speed*10)/10.0;
     }
 }//클래스 괄호
 
