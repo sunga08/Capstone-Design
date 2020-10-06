@@ -38,4 +38,6 @@ public class ReviewView extends LinearLayout {
     public void setUserID(String userID){userID_txt.setText(userID);}
     public void setScore(double score){score_txt.setText(""+score+"점");}
     public void setReviewTxt(String reviewTxt){reviewTxt_txt.setText(reviewTxt);}
+
+
 }

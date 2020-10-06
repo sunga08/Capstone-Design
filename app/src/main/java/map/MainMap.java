@@ -82,6 +82,11 @@ public class MainMap extends AppCompatActivity implements TMapGpsManager.onLocat
     boolean isTouchMyLoc = false;
     TMapMarkerItem myLoc = null;
 
+    boolean isParkButtonClick=false;
+
+    static String userID;
+
+
     List<UserPlace_data> UPList = new ArrayList<UserPlace_data>();
 
     @Override
@@ -92,7 +97,8 @@ public class MainMap extends AppCompatActivity implements TMapGpsManager.onLocat
         mContext = this;
 
         Intent intent = getIntent();
-        final String userID= intent.getStringExtra("userID");
+        userID= intent.getStringExtra("userID");
+
 
         search_txt = (EditText)findViewById(R.id.et_search);
 
@@ -104,7 +110,7 @@ public class MainMap extends AppCompatActivity implements TMapGpsManager.onLocat
         final Button start_setting_btn = (Button)findViewById(R.id.start_seeting_btn); //출발지 지정 버튼
         final Button end_setting_btn = (Button)findViewById(R.id.end_setting_btn); //도착지 지정 버튼
         final Button set_location_btn = (Button)findViewById(R.id.set_location_btn); //사용자 추천 장소 등록 기능에서 위치 지정 버튼
-
+        Button refresh_map_btn = (Button)findViewById(R.id.bt_refresh_map);
 
         //처음 시작시 출발지/도착지 지정, 위치 지정(사용자 추천 장소 등록 기능) 버튼 숨기기
         start_setting_btn.setVisibility(View.GONE);
@@ -142,9 +148,20 @@ public class MainMap extends AppCompatActivity implements TMapGpsManager.onLocat
         final TMapPoint nowPoint = tMapView.getCenterPoint();
         Log.e("현재 위치 중심 좌표: ",""+nowPoint.getLatitude());
 
-        //tMapView.setCenterPoint(126.985302, 37.570841, false);
+        tMapView.setCenterPoint(  127.124401,37.499919,false);
         new BackgroundTask().execute();
         addMarker(tMapView);
+
+        //지도 새로고침 버튼 20.09.20
+        refresh_map_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                tMapView.removeAllTMapPolyLine();
+                Intent intent = getIntent();
+                finish();
+                startActivity(intent);
+            }
+        });
 
         //사용자 추천 장소 등록 버튼
         myLocation_btn.setOnClickListener(new View.OnClickListener() {
@@ -224,11 +241,11 @@ public class MainMap extends AppCompatActivity implements TMapGpsManager.onLocat
                                             boolean success = jsonResponse.getBoolean("success");
                                             if (success)
                                             {
-                                                Toast.makeText(getApplicationContext(), "추천 장소 등록 성공", Toast.LENGTH_LONG).show();
+                                                //Toast.makeText(getApplicationContext(), "추천 장소 등록 성공.", Toast.LENGTH_LONG).show();
 
                                             } else
                                             {
-                                                Toast.makeText(getApplicationContext(), "추천 장소 등록 실패", Toast.LENGTH_LONG).show();
+                                                Toast.makeText(getApplicationContext(), "다시 등록해 주세요.", Toast.LENGTH_LONG).show();
                                                 return;
                                             }
 
@@ -331,104 +348,113 @@ public class MainMap extends AppCompatActivity implements TMapGpsManager.onLocat
         });
 
 
+
         //현재 위치 공원 버튼
         showPark_btn.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
 
-                find_Name=null;
-                find_Point=null;
+                //버튼이 이미 한 번 클릭된 상태면 마커 삭제 20.09.20
+                if(isParkButtonClick==true){
+                    tMapView.removeAllMarkerItem();
+                    isParkButtonClick=false;
+                }
 
-                TMapPoint tpoint = tMapView.getCenterPoint();
+                else {
+                    isParkButtonClick=true;
+                    find_Name = null;
+                    find_Point = null;
 
-                addMarker(tMapView);
-                //if(nowPoint!=tpoint){
-                //    addMarker(tMapView);
-                //}
+                    TMapPoint tpoint = tMapView.getCenterPoint();
 
-                TMapData tmapdata = new TMapData();
-                tmapdata.findAroundNamePOI(tpoint, "공원", new TMapData.FindAroundNamePOIListenerCallback() {
-                    TMapPoint mp=null;
-                    double x, y;
-                    @Override
-                    public void onFindAroundNamePOI(ArrayList<TMapPOIItem> arrayList) {
-                        for(int i = 0; i < arrayList.size(); i++) {
-                            TMapPOIItem item = (TMapPOIItem) arrayList.get(i);
-                            TMapMarkerItem mk = new TMapMarkerItem();
-                            x = item.getPOIPoint().getLatitude();
-                            y = item.getPOIPoint().getLongitude();
-                            mp = item.getPOIPoint();
+                    addMarker(tMapView);
+                    //if(nowPoint!=tpoint){
+                    //    addMarker(tMapView);
+                    //}
 
-                            bitmap = itmapFactory.decodeResource(mContext.getResources(), R.drawable.poi);
+                    TMapData tmapdata = new TMapData();
+                    tmapdata.findAroundNamePOI(tpoint, "공원", new TMapData.FindAroundNamePOIListenerCallback() {
+                        TMapPoint mp = null;
+                        double x, y;
 
-                            mk.setName(item.getPOIName());
-                            mk.setIcon(bitmap);
-                            mk.setTMapPoint(mp);
+                        @Override
+                        public void onFindAroundNamePOI(ArrayList<TMapPOIItem> arrayList) {
+                            for (int i = 0; i < arrayList.size(); i++) {
+                                TMapPOIItem item = (TMapPOIItem) arrayList.get(i);
+                                TMapMarkerItem mk = new TMapMarkerItem();
+                                x = item.getPOIPoint().getLatitude();
+                                y = item.getPOIPoint().getLongitude();
+                                mp = item.getPOIPoint();
 
-                            mk.setCalloutTitle(item.getPOIName());
-                            mk.setCanShowCallout(true);
+                                bitmap = itmapFactory.decodeResource(mContext.getResources(), R.drawable.poi);
 
-                            bitmap2 = BitmapFactory.decodeResource(mContext.getResources(),R.drawable.ic_stat_name);
-                            mk.setCalloutRightButtonImage(bitmap2);
+                                mk.setName(item.getPOIName());
+                                mk.setIcon(bitmap);
+                                mk.setTMapPoint(mp);
 
-                            tMapView.addMarkerItem("markerItem" + i, mk);
-                            Log.d("POI Name: ", item.getPOIName().toString() + ", " +
-                                    "Address: " + item.getPOIAddress().replace("null", "")  + ", " +
-                                    "Point: " + item.getPOIPoint().toString());
+                                mk.setCalloutTitle(item.getPOIName());
+                                mk.setCanShowCallout(true);
 
-                            //마커 클릭시 => 마커 이름과 위치 가져오기, 출발지 도착지 지정 버튼 나타내기
-                            tMapView.setOnClickListenerCallBack(new TMapView.OnClickListenerCallback() {
-                                @Override
-                                public boolean onPressEvent(ArrayList<TMapMarkerItem> arrayList, ArrayList<TMapPOIItem> arrayList1, TMapPoint tMapPoint, PointF pointF) {
-                                    if(!arrayList.isEmpty()){
-                                        find_Name = arrayList.get(0).getName();
-                                        find_Point = arrayList.get(0).getTMapPoint();
-                                        roadguide_btn.setVisibility(View.GONE);
-                                        start_setting_btn.setVisibility(View.VISIBLE);
-                                        end_setting_btn.setVisibility(View.VISIBLE);
-                                        Log.e("마커 이름: ",""+find_Name);
-                                        Log.e("마커의 위도/경도: ",""+arrayList.get(0).getTMapPoint());
+                                bitmap2 = BitmapFactory.decodeResource(mContext.getResources(), R.drawable.ic_stat_name);
+                                mk.setCalloutRightButtonImage(bitmap2);
+
+                                tMapView.addMarkerItem("markerItem" + i, mk);
+                                Log.d("POI Name: ", item.getPOIName().toString() + ", " +
+                                        "Address: " + item.getPOIAddress().replace("null", "") + ", " +
+                                        "Point: " + item.getPOIPoint().toString());
+
+                                //마커 클릭시 => 마커 이름과 위치 가져오기, 출발지 도착지 지정 버튼 나타내기
+                                tMapView.setOnClickListenerCallBack(new TMapView.OnClickListenerCallback() {
+                                    @Override
+                                    public boolean onPressEvent(ArrayList<TMapMarkerItem> arrayList, ArrayList<TMapPOIItem> arrayList1, TMapPoint tMapPoint, PointF pointF) {
+                                        if (!arrayList.isEmpty()) {
+                                            find_Name = arrayList.get(0).getName();
+                                            find_Point = arrayList.get(0).getTMapPoint();
+                                            roadguide_btn.setVisibility(View.GONE);
+                                            start_setting_btn.setVisibility(View.VISIBLE);
+                                            end_setting_btn.setVisibility(View.VISIBLE);
+                                            Log.e("마커 이름: ", "" + find_Name);
+                                            Log.e("마커의 위도/경도: ", "" + arrayList.get(0).getTMapPoint());
+                                        } else {
+                                            roadguide_btn.setVisibility(View.VISIBLE);
+                                            start_setting_btn.setVisibility(View.GONE);
+                                            end_setting_btn.setVisibility(View.GONE);
+                                        }
+                                        return false;
                                     }
-                                    else{
-                                        roadguide_btn.setVisibility(View.VISIBLE);
-                                        start_setting_btn.setVisibility(View.GONE);
-                                        end_setting_btn.setVisibility(View.GONE);
+
+                                    @Override
+                                    public boolean onPressUpEvent(ArrayList<TMapMarkerItem> arrayList, ArrayList<TMapPOIItem> arrayList1, TMapPoint tMapPoint, PointF pointF) {
+                                        return false;
                                     }
-                                    return false;
-                                }
+                                });
 
-                                @Override
-                                public boolean onPressUpEvent(ArrayList<TMapMarkerItem> arrayList, ArrayList<TMapPOIItem> arrayList1, TMapPoint tMapPoint, PointF pointF) {
-                                    return false;
-                                }
-                            });
+                                //리뷰 보기 버튼
+                                tMapView.setOnCalloutRightButtonClickListener(new TMapView.OnCalloutRightButtonClickCallback() {
+                                    @Override
+                                    public void onCalloutRightButton(TMapMarkerItem markerItem) {
+                                        Intent intent = new Intent(MainMap.this, Review_main.class);
+                                        intent.putExtra("place_name", find_Name);
+                                        intent.putExtra("code", MAINMAP_CODE);
+                                        intent.putExtra("userID", userID);
+                                        startActivity(intent);
+                                        Log.d("풍선뷰 Click: ", "선택 됨");
+                                    }
+                                });
 
-                            //리뷰 보기 버튼
-                            tMapView.setOnCalloutRightButtonClickListener(new TMapView.OnCalloutRightButtonClickCallback() {
-                                @Override
-                                public void onCalloutRightButton(TMapMarkerItem markerItem) {
-                                    Intent intent = new Intent(MainMap.this,Review_main.class);
-                                    intent.putExtra("place_name",find_Name);
-                                    intent.putExtra("code",MAINMAP_CODE);
-                                    intent.putExtra("userID", userID);
-                                    startActivity(intent);
-                                    Log.d("풍선뷰 Click: ", "선택 됨");
-                                }
-                            });
+                                tMapView.setOnMarkerClickEvent(new TMapView.OnCalloutMarker2ClickCallback() {
+                                    @Override
+                                    public void onCalloutMarker2ClickEvent(String id, TMapMarkerItem2 markerItem2) {
+                                        String strMessage = "ClickEvent " + " id " + id + " " + markerItem2.latitude + " " + markerItem2.longitude;
+                                        Log.d("log", strMessage);
+                                    }
+                                });
 
-                            tMapView.setOnMarkerClickEvent(new TMapView.OnCalloutMarker2ClickCallback() {
-                                @Override
-                                public void onCalloutMarker2ClickEvent(String id, TMapMarkerItem2 markerItem2) {
-                                    String strMessage = "ClickEvent " + " id " + id + " " + markerItem2.latitude + " " + markerItem2.longitude;
-                                    Log.d("log", strMessage);
-                                }
-                            });
-
+                            }
                         }
-                    }
-                });
-
+                    });
+                }
             }
         });
 
@@ -461,7 +487,7 @@ public class MainMap extends AppCompatActivity implements TMapGpsManager.onLocat
                     startName = find_Name;
                     startPoint = find_Point;
                 }
-                //
+
                 Intent intent =  new Intent(MainMap.this, Roadguide.class);
                 if(endName==null) {
                     intent.putExtra("start_name", startName);
@@ -470,6 +496,8 @@ public class MainMap extends AppCompatActivity implements TMapGpsManager.onLocat
                     intent.putExtra("end_long", 0.0);
                     intent.putExtra("now_lat", startPoint.getLatitude());
                     intent.putExtra("now_long", startPoint.getLongitude());
+                    intent.putExtra("userID", userID);
+                    Log.e("넘기는 userID:",userID);
                     startActivity(intent);
                 }
                 else{
@@ -479,6 +507,7 @@ public class MainMap extends AppCompatActivity implements TMapGpsManager.onLocat
                     intent.putExtra("end_long", endPoint.getLongitude());
                     intent.putExtra("now_lat", startPoint.getLatitude());
                     intent.putExtra("now_long", startPoint.getLongitude());
+                    intent.putExtra("userID",userID);
                     startActivity(intent);
                 }
             }
@@ -492,11 +521,13 @@ public class MainMap extends AppCompatActivity implements TMapGpsManager.onLocat
                     endName = find_Name;
                     endPoint = find_Point;
                 }
+                Log.e("userID",userID);
 
                 Intent intent =  new Intent(MainMap.this, Roadguide.class);
                 intent.putExtra("end_name",endName);
                 intent.putExtra("end_lat", endPoint.getLatitude());
                 intent.putExtra("end_long", endPoint.getLongitude());
+                intent.putExtra("userID",userID);
                 if(startPoint==null){
                     intent.putExtra("now_lat", now_lat);
                     intent.putExtra("now_long",now_long);
@@ -521,6 +552,8 @@ public class MainMap extends AppCompatActivity implements TMapGpsManager.onLocat
 
             Log.e("넘어온 start_lat",""+start_lat);
             Log.e("넘어온 end_lat",""+start_lat);
+
+            tMapView.setCenterPoint(end_lon,end_lat,true);
 
             TMapData tMapData = new TMapData();
             startPoint = new TMapPoint(start_lat, start_lon);
