@@ -101,7 +101,7 @@ public class MyStartWalk extends AppCompatActivity {
     double gpsLatitude, gpsLongitude;
 
 
-
+    private boolean isPause=false; //20.09.19
 
 //    private boolean isFunctionOn; //기능 켜져 있는 확인하는 변수
 
@@ -219,9 +219,9 @@ public class MyStartWalk extends AppCompatActivity {
                     .show();
         }
 
-        /*
+
         //위치 갱신
-        GPShandler = new Handler() {
+        /*GPShandler = new Handler() {
             public void handleMessage(Message msg)
             {
                 super.handleMessage(msg);
@@ -260,9 +260,9 @@ public class MyStartWalk extends AppCompatActivity {
 
             }
 
-        };
+        };*/
 
-        */
+
 
         /*
         //기피견종 안내 기능 On된 상태면 위치 받기
@@ -331,36 +331,46 @@ public class MyStartWalk extends AppCompatActivity {
             public void onClick(View view) {
                 stopWalkTime();
                 //속력 갱신
-                double mySpeed = getSpeed();
-                Response.Listener<String> responseListener = new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response)
-                    {
-                        try
-                        {
-                            JSONObject jsonResponse = new JSONObject(response);
-                            boolean success = jsonResponse.getBoolean("success");
-                            if (success)
-                            {
-                                Toast.makeText(getApplicationContext(), "mySpeed 갱신 성공", Toast.LENGTH_LONG).show();
+                if(isPause==true){  //일시정지가 이미 한번 눌린상태면(다시 시작할 때)
+                    isPause=false;
+                    Log.e("isPasue: ","false 설정 됨");
+                }
+                else { //진짜 일시정지 상태 (일시정지가 false인 상태)
+                    isPause = true;
+                    Log.e("isPause: ", "true 설정 됨");
+                    stopWalkTime();
+                    double mySpeed = getSpeed();
+                    //속력 갱신
+                    if (mySpeed != 0) {  //20.09.19
+                        Log.e("새로운 speed: ", "" + mySpeed);
+                        Response.Listener<String> responseListener = new Response.Listener<String>() {
+                            @Override
+                            public void onResponse(String response) {
+                                try {
+                                    JSONObject jsonResponse = new JSONObject(response);
+                                    boolean success = jsonResponse.getBoolean("success");
+                                    if (success) {
+                                        Toast.makeText(getApplicationContext(), "mySpeed 갱신 성공", Toast.LENGTH_LONG).show();
 
-                            } else
-                            {
-                                Toast.makeText(getApplicationContext(), "mySpeed 갱신 실패", Toast.LENGTH_LONG).show();
-                                return;
+                                    } else {
+                                        Toast.makeText(getApplicationContext(), "mySpeed 갱신 실패", Toast.LENGTH_LONG).show();
+                                        return;
+                                    }
+
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+
                             }
+                        };
 
-                        } catch (JSONException e)
-                        {
-                            e.printStackTrace();
-                        }
-
+                        SpeedRequest SR = new SpeedRequest(userID, mySpeed, responseListener);
+                        RequestQueue queue = Volley.newRequestQueue(MyStartWalk.this);
+                        queue.add(SR);
+                        totalDist = 0;  //20.09.18
+                        totalTime = 0;  //20.09.18
                     }
-                };
-
-                SpeedRequest SR = new SpeedRequest(userID, mySpeed, responseListener);
-                RequestQueue queue = Volley.newRequestQueue(MyStartWalk.this);
-                queue.add(SR);
+                }
             }
         });
 
@@ -991,11 +1001,11 @@ public class MyStartWalk extends AppCompatActivity {
     }
 
     public double getSpeed(){
-        speed = totalDist/totalTime;
+        speed = Math.round((totalDist/totalTime)*10)/10.0;  //20.09.18
         Log.e("총 이동거리: ",""+Math.round(totalDist*100)/100.0+"m");
         Log.e("총 시간: ",""+totalTime+"초");
         Log.e("속력: ",""+speed+"m/s");
-        return Math.round(speed*10)/10.0;
+        return speed; //20.09.18
     }
 }//클래스 괄호
 

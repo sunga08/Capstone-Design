@@ -78,50 +78,53 @@ public class RegisterActivityReview extends AppCompatActivity {
                     return;
                 }
 
-                reviewScore = Double.valueOf(score);
-                reviewTxt = et_reviewTxt.getText().toString();
-                Log.d("review Score: ",""+reviewScore);
-                Log.d("reviewTxt: ",reviewTxt);
-                Log.d("userID: ",userID);
-                Log.d("placeName: ",placeName);
+                else {
+                    reviewScore = Double.valueOf(score);
+                    reviewTxt = et_reviewTxt.getText().toString();
+                    //Log.d("review Score: ", "" + reviewScore);
+                    //Log.d("reviewTxt: ", reviewTxt);
+                    //Log.d("userID: ", userID);
+                    //Log.d("placeName: ", placeName);
 
-                Response.Listener<String> responseListener = new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response)
-                    {
-                        try
-                        {
-                            JSONObject jsonResponse = new JSONObject(response);
-                            boolean success = jsonResponse.getBoolean("success");
-                            if (success)
-                            {
-                                Toast.makeText(getApplicationContext(), "리뷰 등록 성공", Toast.LENGTH_LONG).show();
-                                Intent intent = new Intent(RegisterActivityReview.this, map.Review_main.class); //메인 액티비티로 서버에서 받아온 아이디와 비밀번호 인텐트에 실어서 주기
-                                intent.putExtra("userID", userID);
-                                intent.putExtra("placeName", placeName);
-                                intent.putExtra("reviewTxt", reviewTxt);
-                                intent.putExtra("reviewScore", reviewScore);
-                                finish();
+                    Response.Listener<String> responseListener = new Response.Listener<String>() {
+                        @Override
+                        public void onResponse(String response) {
+                            try {
+                                JSONObject jsonResponse = new JSONObject(response);
+                                boolean success = jsonResponse.getBoolean("success");
+                                if (success) {
+                                    Toast.makeText(getApplicationContext(), "등록되었습니다.", Toast.LENGTH_LONG).show();
+                                    //Intent intent = new Intent(RegisterActivityReview.this, map.Review_main.class); //메인 액티비티로 서버에서 받아온 아이디와 비밀번호 인텐트에 실어서 주기
+                                    //intent.putExtra("userID", userID);
+                                    //intent.putExtra("placeName", placeName);
+                                    //intent.putExtra("reviewTxt", reviewTxt);
+                                    //intent.putExtra("reviewScore", reviewScore);
+                                    //finish();
 
-                            } else
-                            {
-                                Toast.makeText(getApplicationContext(), "리뷰 등록 실패", Toast.LENGTH_LONG).show();
-                                return;
+                                } else {
+                                    Toast.makeText(getApplicationContext(), "다시 등록해 주세요.", Toast.LENGTH_LONG).show();
+                                    return;
+                                }
+
+                            } catch (JSONException e) {
+                                e.printStackTrace();
                             }
 
-                        } catch (JSONException e)
-                        {
-                            e.printStackTrace();
                         }
+                    };
 
-                    }
-                };
-
-                RegisterRequestReview RAR = new RegisterRequestReview(userID, placeName, reviewTxt, reviewScore, responseListener);
-                RequestQueue queue = Volley.newRequestQueue(RegisterActivityReview.this);
-                queue.add(RAR);
+                    RegisterRequestReview RAR = new RegisterRequestReview(userID, placeName, reviewTxt, reviewScore, responseListener);
+                    RequestQueue queue = Volley.newRequestQueue(RegisterActivityReview.this);
+                    queue.add(RAR);
+                    Log.d("review Score: ", "" + reviewScore);
+                    Log.d("reviewTxt: ", reviewTxt);
+                    Log.d("userID: ", userID);
+                    Log.d("placeName: ", placeName);
+                    finish();
+                }
             }
         });
+
 
 
 
