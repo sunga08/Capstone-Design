@@ -14,7 +14,7 @@
 
 - 개발 환경 : Android Studio 
 
-- API 및 라이브러리
+- 사용 API 및 라이브러리
   - API : T Map (Map, POI 검색, GeoCoding)
   - 라이브러리 : volley
   
