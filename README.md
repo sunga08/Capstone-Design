@@ -12,7 +12,7 @@
 
 - 사용 언어 : Java, php
 
-- 개발 환경 : Android Studio 
+- 개발 환경 및 개발 도구: Android Studio / phpMyAdmin 
 
 - 사용 API 및 라이브러리
   - API : T Map (Map, POI 검색, GeoCoding)
