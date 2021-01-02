@@ -27,27 +27,27 @@
    <img width="200" src="https://user-images.githubusercontent.com/53103434/103452614-84585c00-4d14-11eb-8ab5-e858c88e53e9.jpg">
    </div><br>                                                                            
  
-   - 산책 중 기피 견종에 대한 알림 기능<br>
-   <div>
+   - 산책 중 기피 견종에 대한 알림 기능
+   <div><br>
    <img width="200" src="https://user-images.githubusercontent.com/53103434/103452619-93d7a500-4d14-11eb-8363-133e00f98928.jpg">&nbsp;&nbsp;&nbsp;
    <img width="200" src="https://user-images.githubusercontent.com/53103434/103452621-95a16880-4d14-11eb-8568-c15f2e0e7310.jpg">
    </div><br>
  
 2. 반려견 산책 맞춤 지도
-   - 주변 공원 및 사용자가 직접 등록한 추천 장소 표시<br>
-   <div>
+   - 주변 공원 및 사용자가 직접 등록한 추천 장소 표시
+   <div><br>
    <img width="200" src="https://user-images.githubusercontent.com/53103434/103452625-9a661c80-4d14-11eb-87ff-be8b6b75f445.jpg">&nbsp;&nbsp;&nbsp;
    <img width="200" src="https://user-images.githubusercontent.com/53103434/103452627-9cc87680-4d14-11eb-90b1-06faccaff31b.jpg">&nbsp;&nbsp;&nbsp;
    </div><br> 
  
-   - 산책 장소에 대한 리뷰 기능<br>
-   <div>
+   - 산책 장소에 대한 리뷰 기능
+   <div><br>
    <img width="200" src="https://user-images.githubusercontent.com/53103434/103452630-a225c100-4d14-11eb-990a-6659c4a16a23.jpg">&nbsp;&nbsp;&nbsp;
    <img width="200" src="https://user-images.githubusercontent.com/53103434/103452631-a4881b00-4d14-11eb-86a8-8a59ce1995fa.jpg">&nbsp;&nbsp;&nbsp;
    </div><br>
  
-   - 경로 안내 기능<br>
-   <div>
+   - 경로 안내 기능
+   <div><br>
    <img width="200" src="https://user-images.githubusercontent.com/53103434/103452637-b964ae80-4d14-11eb-8d49-5de8de7becb9.jpg">&nbsp;&nbsp;&nbsp;
    <img width="200" src="https://user-images.githubusercontent.com/53103434/103452638-bbc70880-4d14-11eb-948d-24a475fcd3f5.jpg">&nbsp;&nbsp;&nbsp;
    <img width="200" src="https://user-images.githubusercontent.com/53103434/103452639-be296280-4d14-11eb-8d49-d22ada4297ac.jpg">
