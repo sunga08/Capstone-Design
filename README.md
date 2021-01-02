@@ -13,8 +13,8 @@
 - 개발 도구 : Android Studio 
 
 - API 및 라이브러리
- - API: T Map (Map, POI 검색, GeoCoding)
- - 라이브러리: Volley, pedroSG94, MPAndroidChart, JUnit, Espresso
+  - API: T Map (Map, POI 검색, GeoCoding)
+  - 라이브러리: Volley, pedroSG94, MPAndroidChart, JUnit, Espresso
 
 ## 주요 기능
 1) 산책 시간 및 횟수 추천
