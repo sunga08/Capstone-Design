@@ -21,8 +21,8 @@
 
 ## 주요 기능
 1. 산책 시간 및 횟수 추천
-   - 사용자의 반려견에 대한 데이터 및 만족도를 바탕으로 분석<br>
-   <div>
+   - 사용자의 반려견에 대한 데이터 및 만족도를 바탕으로 분석
+   <div><br>
    <img width="200" src="https://user-images.githubusercontent.com/53103434/103452608-7efb1180-4d14-11eb-86d1-734720994d03.jpg">&nbsp;&nbsp;&nbsp;
    <img width="200" src="https://user-images.githubusercontent.com/53103434/103452614-84585c00-4d14-11eb-8ab5-e858c88e53e9.jpg">
    </div><br>                                                                            
